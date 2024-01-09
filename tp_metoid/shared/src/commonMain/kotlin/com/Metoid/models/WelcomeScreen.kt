@@ -1,5 +1,6 @@
 package com.Metoid.models
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -25,18 +26,20 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.BlendMode.Companion.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.ImeAction
 import com.Metoid.network.fetchWeatherData
 import io.ktor.client.plugins.ClientRequestException
 import kotlinx.coroutines.launch
 
+
 @Composable
 internal fun WelcomeScreen() {
     var searchText by remember { mutableStateOf("") }
-    var weatherData by remember { mutableStateOf<WeatherData?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
+    var weatherData by remember { mutableStateOf<WeatherResponse?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -69,14 +72,14 @@ internal fun WelcomeScreen() {
         Button(
             onClick = {
                 coroutineScope.launch {
-                    isLoading = true
+                    isLoading = true // Commence le chargement
                     errorMessage = null
                     try {
                         weatherData = fetchWeatherData(searchText)
-                    } catch (e: ClientRequestException) {
-                        errorMessage = "Erreur lors de la récupération des données"
+                    } catch (e: Exception) {
+                        errorMessage = "Erreur lors de la récupération des données: ${e.message}"
                     } finally {
-                        isLoading = false
+                        isLoading = false // Termine le chargement
                     }
                 }
             }
@@ -84,14 +87,18 @@ internal fun WelcomeScreen() {
             Text("Recherche")
         }
 
+
         if (isLoading) {
             CircularProgressIndicator()
         }
 
         weatherData?.let { data ->
-            // Afficher les données météo ici
             Text("Météo pour ${data.name}")
+            Text("Température : ${data.main.temp}°C")
+            Text("Humidité : ${data.main.humidity}%")
+            Text ("Description : ${data.weather[0].description}")
         }
+
 
         errorMessage?.let {
             Text(it)

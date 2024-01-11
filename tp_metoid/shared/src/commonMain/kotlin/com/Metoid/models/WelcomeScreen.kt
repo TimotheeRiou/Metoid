@@ -1,41 +1,35 @@
 package com.Metoid.models
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
-import androidx.compose.material.Card
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.BlendMode.Companion.Color
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.Metoid.network.fetchWeatherData
-import io.ktor.client.plugins.ClientRequestException
 import kotlinx.coroutines.launch
 
 
@@ -46,6 +40,7 @@ internal fun WelcomeScreen() {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
+    var isClicked by remember { mutableStateOf(false) }
     val white = Color(0xFFFFFFFF)
     val customGreen = Color(0xFF4F6F52)
 
@@ -143,6 +138,32 @@ internal fun WelcomeScreen() {
                         append(data.weather[0].description)
                     }
                 })
+                //bouton pour Ajouter à mes favoris
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            isClicked = !isClicked // Toggle the isClicked state
+                            isLoading = true
+                            errorMessage = null
+                            try {
+                                weatherData = fetchWeatherData(searchText)
+                            } catch (e: Exception) {
+                                errorMessage =
+                                    "Erreur lors de la récupération des données"
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    },
+                    shape = RoundedCornerShape(20),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = customGreen)
+                ) {
+                    Text(
+                        if (isClicked) "Retirer des favoris" else "Ajouter aux favoris",
+                        color = white
+                    )
+                }
+                //TODO afficher une liste de ville favorite
             }
 
 

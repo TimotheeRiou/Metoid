@@ -1,6 +1,6 @@
 package com.Metoid.network
 
-import com.Metoid.models.WeatherResponse // Assurez-vous que c'est bien WeatherResponse
+import com.Metoid.models.WeatherResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

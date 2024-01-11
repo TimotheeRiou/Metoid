@@ -126,7 +126,7 @@ internal fun WelcomeScreen() {
                 Text(buildAnnotatedString {
                     append("Température : ")
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("${data.main.temp}°C")
+                        append("${data.main.temp.toInt()}°C")
                     }
                 })
 

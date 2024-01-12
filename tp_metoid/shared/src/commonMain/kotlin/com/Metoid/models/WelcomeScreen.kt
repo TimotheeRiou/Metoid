@@ -124,6 +124,7 @@ internal fun WelcomeScreen() {
                                     weatherData = fetchWeatherData(city)
                                     searchText = city
                                 } catch (e: Exception) {
+                                    e.printStackTrace()
                                     errorMessage = "Erreur lors de la récupération des données"
                                 } finally {
                                     isLoading = false

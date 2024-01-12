@@ -1,25 +1,10 @@
 package com.Metoid.models
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,15 +17,14 @@ import androidx.compose.ui.unit.sp
 import com.Metoid.network.fetchWeatherData
 import kotlinx.coroutines.launch
 
-
 @Composable
 internal fun WelcomeScreen() {
     var searchText by remember { mutableStateOf("") }
     var weatherData by remember { mutableStateOf<WeatherResponse?>(null) }
+    var favorites by remember { mutableStateOf(listOf<String>()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
-    var isClicked by remember { mutableStateOf(false) }
     val white = Color(0xFFFFFFFF)
     val customGreen = Color(0xFF4F6F52)
 
@@ -82,90 +66,72 @@ internal fun WelcomeScreen() {
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        isLoading = true // Commence le chargement
+                        isLoading = true
                         errorMessage = null
                         try {
                             weatherData = fetchWeatherData(searchText)
                         } catch (e: Exception) {
-                            errorMessage =
-                                "Erreur lors de la récupération des données"
-                            //"Erreur lors de la récupération des données: ${e.message}"
+                            errorMessage = "Erreur lors de la récupération des données"
                         } finally {
-                            isLoading = false // Termine le chargement
+                            isLoading = false
                         }
                     }
                 },
                 shape = RoundedCornerShape(20),
                 colors = ButtonDefaults.buttonColors(backgroundColor = customGreen)
             ) {
-                Text(
-                    "Recherche",
-                    color = white
-                )
+                Text("Recherche", color = white)
             }
             Spacer(modifier = Modifier.height(20.dp))
-
 
             if (isLoading) {
                 CircularProgressIndicator()
             }
 
             weatherData?.let { data ->
-                Text(buildAnnotatedString {
-                    append("Météo pour ")
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("${data.name}, ${data.sys.country}")
-                    }
-                })
+                DisplayWeatherData(data)
 
-                Text(buildAnnotatedString {
-                    append("Température : ")
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("${data.main.temp.toInt()}°C")
-                    }
-                })
-
-                Text(buildAnnotatedString {
-                    append("Humidité : ")
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("${data.main.humidity}%")
-                    }
-                })
-
-                Text(buildAnnotatedString {
-                    append("Description : ")
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append(data.weather[0].description)
-                    }
-                })
-                //bouton pour Ajouter à mes favoris
                 Button(
                     onClick = {
-                        coroutineScope.launch {
-                            isClicked = !isClicked // Toggle the isClicked state
-                            isLoading = true
-                            errorMessage = null
-                            try {
-                                weatherData = fetchWeatherData(searchText)
-                            } catch (e: Exception) {
-                                errorMessage =
-                                    "Erreur lors de la récupération des données"
-                            } finally {
-                                isLoading = false
-                            }
+                        if (data.name in favorites) {
+                            favorites = favorites - data.name
+                        } else {
+                            favorites = favorites + data.name
                         }
                     },
                     shape = RoundedCornerShape(20),
                     colors = ButtonDefaults.buttonColors(backgroundColor = customGreen)
                 ) {
                     Text(
-                        if (isClicked) "Retirer des favoris" else "Ajouter aux favoris",
+                        if (data.name in favorites) "Retirer des favoris" else "Ajouter aux favoris",
                         color = white
                     )
                 }
-                //TODO afficher une liste de ville favorite
             }
 
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text("Villes favorites :", fontWeight = FontWeight.Bold)
+            favorites.forEach { city ->
+                Text(
+                    city,
+                    modifier = Modifier
+                        .clickable {
+                            coroutineScope.launch {
+                                isLoading = true
+                                errorMessage = null
+                                try {
+                                    weatherData = fetchWeatherData(city)
+                                    searchText = city
+                                } catch (e: Exception) {
+                                    errorMessage = "Erreur lors de la récupération des données"
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
+                        }
+                )
+            }
 
             errorMessage?.let {
                 Text(it)
@@ -174,3 +140,46 @@ internal fun WelcomeScreen() {
     }
 }
 
+@Composable
+fun DisplayWeatherData(data: WeatherResponse) {
+    Text(buildAnnotatedString {
+        append("Météo pour ")
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+            append("${data.name}, ${data.sys.country}")
+        }
+    })
+
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Text(buildAnnotatedString {
+        append("Température : ")
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+            append("${data.main.temp.toInt()}°C")
+        }
+    })
+
+    Text(buildAnnotatedString {
+        append("Température ressentie : ")
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+            append("${data.main.feels_like.toInt()}°C")
+        }
+    })
+
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Text(buildAnnotatedString {
+        append("Humidité : ")
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+            append("${data.main.humidity}%")
+        }
+    })
+
+    Spacer(modifier = Modifier.height(20.dp))
+
+    Text(buildAnnotatedString {
+        append("Description : ")
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+            append(data.weather[0].description)
+        }
+    })
+}

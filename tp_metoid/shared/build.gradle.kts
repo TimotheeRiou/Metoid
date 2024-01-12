@@ -40,12 +40,11 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
-                api("androidx.activity:activity-compose:1.7.2")
+                api("androidx.activity:activity-compose:1.8.1")
                 api("androidx.appcompat:appcompat:1.6.1")
-                api("androidx.core:core-ktx:1.10.1")
+                api("androidx.core:core-ktx:1.12.0")
                 implementation("io.ktor:ktor-client-android:2.3.4") // for Android
-                implementation("com.mapbox.mapboxsdk:mapbox-android-sdk:9.7.0")
-
+                implementation("app.cash.sqldelight:android-driver:2.0.0")
             }
         }
         val iosX64Main by getting
@@ -89,5 +88,5 @@ android {
     }
 }
 dependencies {
-    implementation("androidx.compose.ui:ui-text-android:1.5.4")
+    implementation("com.google.firebase:firebase-crashlytics-buildtools:2.9.9") // Updated version
 }
